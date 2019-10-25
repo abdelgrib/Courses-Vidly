@@ -1,0 +1,56 @@
+﻿@model Vidly.ViewModels.CustomerFormViewModel
+@{
+    ViewBag.Title = "CustomerForm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>New Customer</h2>
+@*  Cette vue peut être utilisée pour New et Edit, car les input sont aussi configurés avec les champs
+    using pour {} pour créer </form>
+    <div> et form-group, form-control : bootstrap
+    Avec html helper la configuration du champ (maxlength, required et autres) seront reportés ici sinon : html et écrire tout ça à la mano
+    + des attribut comme for dans label contrairement a label à la mano utilisé pour changer displayname
+    if faut ajouter Id pour Edit sinon toujours vide et considéré new
+
+    *@
+ @using (Html.BeginForm("Save", "Customers"))
+ {
+     @*@Html.ValidationSummary() indique les champs avec prbl , id aussi s'il n'est pas init*@
+     @Html.ValidationSummary(true, "Veuillez corriger les erreurs suivantes.")
+     <div>
+         @Html.LabelFor(c => c.Customer.Name)
+         @Html.TextBoxFor(c => c.Customer.Name, new { @class = "form-control" })
+         @Html.ValidationMessageFor(c => c.Customer.Name)
+    </div>
+    <div>
+        @Html.LabelFor(c => c.Customer.MembershipTypeId)
+        @Html.DropDownListFor(c => c.Customer.MembershipTypeId, new SelectList(Model.MembershipTypes, "Id", "Name"), "Select Membership Type", new { @class = "form-control" })
+        @Html.ValidationMessageFor(c => c.Customer.MembershipTypeId)
+    </div>
+    <div>
+        @Html.LabelFor(c => c.Customer.Birthday)
+        @Html.TextBoxFor(c => c.Customer.Birthday, "{0:dd MMM yyyy}", new { @class = "form-control" })
+        @Html.ValidationMessageFor(c => c.Customer.Birthday)
+    </div>
+    <div class="checkbox">
+        <label>
+            @Html.CheckBoxFor(c => c.Customer.IsSubscribedToNewsletter) Subscribed to Newsletter?
+        </label>
+    </div>
+     @Html.HiddenFor(c => c.Customer.Id)
+     @Html.AntiForgeryToken() @* create a cookie in client machine which stores a key which will be compared to key in created html element
+                                 this field exist only in the user form, hacker haven't access to it (his value)
+      *@
+     <button type="submit" class="btn btn-primary">Save</button>
+    
+ }
+
+@*
+    client side validation don't support custom validation like Min18YearIfAMember, support only built-in annotations
+    to add that we need to write a js script to do it
+*@
+
+@section scripts
+{   
+    @Scripts.Render("~/bundles/jqueryval")
+}

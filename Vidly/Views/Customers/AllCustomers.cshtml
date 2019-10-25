@@ -1,0 +1,125 @@
+﻿@model IEnumerable<Vidly.Models.Customer>
+@{
+    ViewBag.Title = "AllCustomers";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Customers</h2>
+
+@*@if (!Model.Any())
+    {
+        <p>We don't have any customers yet.</p>
+    }
+    else
+    {*@
+    <table id="customers" class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Membership Type</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!--no need server side rendering
+            @@foreach (var c in Model)
+            {
+                <tr>
+                    <td><a href="/Customers/Edit/@@c.Id">@@c.Name</a></td>
+                    <td>@@c.MembershipType.Name</td>
+                    <td>
+                        <button data-customer-id="@@c.Id" class="btn btn-link js-delete">Delete</button>
+                    </td>
+                </tr>
+            }-->
+        </tbody>
+    </table>
+@*}*@
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+
+            //$("#customers").DataTable(); //it will parse table to find data (client side), why don't send only data directly as json (API)
+            var table = $("#customers").DataTable({ //table to get reference to table, use it to manip rows like deleting
+                ajax: {
+                    url: "/api/customers",
+                    dataSrc: "" //{,[{}]} [{}]
+                },
+                columns: [
+                    {
+                        data: "name", //tell the plugin where to get data (json object)
+                        render: function (data, type, customer) { //we have link ! we need custom render function. data = name in this case; type for this column; customer (whatever) : actual object or row we're rendering
+                            return "<a href='/customers/edit/" + customer.id + "'>"+ customer.name +"</a>";
+                        }
+                    },
+                    {
+                        data: "membershipType.name" //hierarchical data : eager loading
+                    },
+                    {
+                        data: "id",
+                        render: function (data) {
+                            return "<button data-customer-id=" + data + " class='btn btn-link js-delete'>Delete</button>";
+                        }
+                    }
+                ]
+
+            });
+
+            //$("#customers .js-delete").on("click", function () { seperate handler function in memery x more customers we have
+            $("#customers").on("click", ".js-delete", function () { //on() hooked to one elem #customers (id) and we use filter : one click handler for all button
+
+                var btn = $(this);
+                bootbox.confirm("Are you sure that you would delete this customer ?", function (result)
+                {
+                    if (result)
+                    {
+                        $.ajax({
+                            url: "/api/customers/" + btn.attr("data-customer-id"),
+                            method: "DELETE",
+                            success: function () {
+                                table.row(btn.closest("tr")).remove().draw(); // remove() : del customer from internal list; draw() : customer will desepear from the view
+                                //btn.closest("tr").remove(); // DOM, DataTable save internal list
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+
+@*
+
+         Note: I've set the model for this view to IEnumerable<Customer>.
+    +    This is a simple interface implemented by the list class. Since
+    +    in this view we only want to iterate over this list, and we don't
+    +    need any of the operations in the List class (eg Add, Remove, etc),
+    +    it's better to use the IEnumerable interface, which allows use to
+    +    iterate over the list. If in the future, we replace the List with a
+    +    different data structure, as long as it is enumerable, our view code
+    +    will remain unchanged.
+
+    <td>@Html.ActionLink(customer.Name, "Details", "Customers", new { id = customer.Id }, null)</td>
+       @if(Model.Customers.Count == 0)
+       {
+           <p>We don't have any customers yet.</p>
+       }
+       else
+       {
+           <table class="table table-bordered table-hover">
+               <thead>
+
+               </thead>
+               <tbody>
+                   @foreach (var c in Model.Customers)
+                   {
+                       <tr><td><a href="/Customers/Details/@c.Id">@c.Name</a></td></tr>
+                   }
+               </tbody>
+           </table>
+       }
+*@
+
